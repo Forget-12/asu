@@ -1,0 +1,11 @@
+[phases.setup]
+aptPkgs = [
+  "xvfb",
+  "libnss3",
+  "libatk-bridge2.0-0",
+  "libgtk-3-0",
+  "libasound2",
+  "libxss1",
+  "libgbm1",
+  "fonts-liberation"
+]
