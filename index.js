@@ -20,6 +20,14 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // ==================
+// HEALTH CHECK ROUTE (TAMBAHAN BARU)
+// ==================
+app.get('/health', (req, res) => {
+    // Rute ini hanya untuk memberitahu server bahwa aplikasi hidup
+    res.status(200).send('OK')
+})
+
+// ==================
 // ROUTES
 // ==================
 app.post('/turnstile', async (req, res) => {
@@ -67,6 +75,7 @@ app.post('/turnstile', async (req, res) => {
 
     res.status(result.code ?? 400).send(result)
 })
+
 app.post('/recaptchaV3', async (req, res) => {
 	let { url, sitekey } = req.body
     if (!url || !sitekey) {
@@ -110,10 +119,12 @@ app.post('/recaptchaV3', async (req, res) => {
 
     res.status(result.code ?? 400).send(result)
 })
+
 // ==================
 // START SERVER
-// ==================js
-const server = app.listen(port, () => {
+// ==================
+// PERHATIKAN: Tambahkan '0.0.0.0' agar EthioDeploy bisa mendeteksi port-nya
+const server = app.listen(port, '0.0.0.0', () => {
     console.log(`Server running on port ${port}`)
 })
 
