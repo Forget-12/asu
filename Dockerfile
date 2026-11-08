@@ -2,13 +2,11 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Set DISPLAY untuk Xvfb
+# Set environment variable untuk Xvfb dan Chrome
 ENV DISPLAY=:99
-
-# TAMBAHKAN CHROME_PATH (Penting untuk memperbaiki error di log Anda)
 ENV CHROME_PATH=/usr/bin/google-chrome
 
-# 1. Instal dependensi dasar + Python & Xvfb
+# 1. Instal dependensi dasar, Python, dan Xvfb
 RUN apt-get update && apt-get install -y \
     xvfb \
     wget \
@@ -34,19 +32,15 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --d
     && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Setup Virtual Environment
+# 3. Setup Virtual Environment (venv) agar pip tidak error di Ubuntu 24.04
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# 4. Install library Python yang dipakai oleh bot.py (Tanpa butuh requirements.txt)
+RUN pip install --no-cache-dir httpx rich pytz requests urllib3
+
+# 5. Set folder kerja dan copy semua file project Anda
 WORKDIR /app
-
-# 4. Copy & Install Python Requirements
-COPY requirements.txt* ./
-RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; \
-    else pip install --no-cache-dir httpx rich pytz requests playwright; fi
-    # (Saya tambahkan 'playwright' jaga-jaga jika bot Anda menggunakan library ini)
-
-# 5. Copy Sisa File
 COPY . .
 
 # 6. Jalankan Xvfb di background, lalu jalankan bot
