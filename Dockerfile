@@ -1,13 +1,14 @@
-# Menggunakan Ubuntu 24.04 sebagai base image
 FROM ubuntu:24.04
 
-# Menghindari prompt interaktif saat apt-get install
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Set environment variable untuk Xvfb (Virtual Display)
+# Set DISPLAY untuk Xvfb
 ENV DISPLAY=:99
 
-# 1. Instal dependensi dasar (sesuai request Anda) + Python & Xvfb
+# TAMBAHKAN CHROME_PATH (Penting untuk memperbaiki error di log Anda)
+ENV CHROME_PATH=/usr/bin/google-chrome
+
+# 1. Instal dependensi dasar + Python & Xvfb
 RUN apt-get update && apt-get install -y \
     xvfb \
     wget \
@@ -26,29 +27,27 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Tambahkan repo Google dan instal Chrome
+# 2. Instal Google Chrome
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update \
     && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Setup Virtual Environment untuk Python (menghindari error PEP 668 di Ubuntu 24.04)
+# 3. Setup Virtual Environment
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# 4. Setup Working Directory dan copy file
 WORKDIR /app
 
-# Copy requirements.txt jika ada, lalu install. 
-# Jika tidak ada, kita install manual library yang dipakai script bot Anda
+# 4. Copy & Install Python Requirements
 COPY requirements.txt* ./
 RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; \
-    else pip install --no-cache-dir httpx rich pytz requests; fi
+    else pip install --no-cache-dir httpx rich pytz requests playwright; fi
+    # (Saya tambahkan 'playwright' jaga-jaga jika bot Anda menggunakan library ini)
 
-# Copy seluruh file project (bot.py, dll)
+# 5. Copy Sisa File
 COPY . .
 
-# 5. Jalankan Xvfb di background, lalu jalankan bot.py
-# Menggunakan 'exec' agar signal SIGTERM (Ctrl+C / Docker stop) diteruskan ke Python dengan baik
+# 6. Jalankan Xvfb di background, lalu jalankan bot
 CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x1024x24 & exec python3 bot.py"]
