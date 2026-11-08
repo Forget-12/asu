@@ -1,5 +1,5 @@
 [phases.setup]
-# 1. Instal dependensi dasar dan Xvfb
+# 1. Instal dependensi dasar (xvfb sudah ada di dalam list ini)
 aptPkgs = [
   "xvfb",
   "wget",
@@ -14,10 +14,16 @@ aptPkgs = [
   "fonts-liberation"
 ]
 
-# 2. Tambahkan repo Google dan instal Chrome
+# 2. Tambahkan repo Google, instal Chrome, dan Auto-Start Xvfb
 cmds = [
   "wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -",
   "sh -c 'echo \"deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main\" >> /etc/apt/sources.list.d/google.list'",
   "apt-get update",
-  "apt-get install -y google-chrome-stable"
+  "apt-get install -y google-chrome-stable",
+  
+  # --- TAMBAHAN UNTUK AUTO-INSTAL & JALANKAN XVFB ---
+  # Menjalankan Xvfb di background dengan resolusi 1280x1024 (Display :99)
+  "Xvfb :99 -screen 0 1280x1024x24 &",
+  # Set environment DISPLAY agar Google Chrome / Bot bisa mendeteksi layar virtual
+  "export DISPLAY=:99"
 ]
