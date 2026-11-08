@@ -32,16 +32,22 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --d
     && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Setup Virtual Environment (venv) agar pip tidak error di Ubuntu 24.04
+# 3. Setup Virtual Environment Python & Install library Python (Jaga-jaga jika index.js memanggil bot.py)
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-
-# 4. Install library Python yang dipakai oleh bot.py (Tanpa butuh requirements.txt)
 RUN pip install --no-cache-dir httpx rich pytz requests urllib3
 
-# 5. Set folder kerja dan copy semua file project Anda
+# 4. INSTAL NODE.JS (Versi 20.x LTS)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# 5. Set folder kerja dan copy file
 WORKDIR /app
 COPY . .
 
-# 6. Jalankan Xvfb di background, lalu jalankan bot
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x1024x24 & exec python3 bot.py"]
+# 6. INSTAL DEPENDENSI NODE.JS (Jika ada file package.json)
+RUN if [ -f package.json ]; then npm install; fi
+
+# 7. Jalankan Xvfb di background, lalu jalankan index.js
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x1024x24 & exec node index.js"]
